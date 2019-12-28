@@ -1,38 +1,50 @@
 body 
   margin 0
-  padding 0
+  padding 20px 0
   width 100%
   background-color aliceblue
   overflow: hidden
+  font-family mono
+
+#container
+  display flex
+  flex-direction row
+  justify-content center
 
 #transport 
-  font-family mono
-  size 20px
+  display flex
+  flex-direction row
+  justify-content space-between
+  height 50px
+  // border 1px dotted grey
+  width 600px
+  margin 20px 0
 
-#app
-  width 100%
-  min-height 100vh
-  height auto
+#mixer 
+  // border 1px dotted grey
+  margin-top 5px
+  display flex
+  flex-direction row
+  width 600px
 
-  svg
-    width 100%
-    height 100vh
+  >span
+    font-size 0.75rem
 
-#tweakable
-  width 70%
-  height 100vh
+  input[type='range']
+    margin 0 10px
+    flex-grow 1
 
-#hitareas
-  z-index 100
-  position absolute
-  width 100vw
-  height 100vh
-  top 0px
-  left 0px
-  
-  .hitarea
-    position absolute
-    background-color rgba(255, 0, 0, 0.3)
-    // padding 4px
-    // margin -4px 0 0 -4px
-    // border-radius 4px
+video
+  display block
+
+video::-webkit-media-controls-volume-slider 
+  display none
+
+video::-webkit-media-controls-mute-button
+  display none
+
+video::media-controls-volume-slider 
+  display none
+
+video::media-controls-mute-button
+  display none

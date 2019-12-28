@@ -10,11 +10,22 @@
 </head>
 
 <body>
-  <video controls width="600px" preload="auto">
-    <source src="/assets/mozk545a-2.mp4" type="video/mp4">
-  </video>
-  <div id="transport"></div>
-  <script src="./src/index.ts"></script>
+  <div id="container">
+    <div>
+      <video width="600px" preload="auto" controls>
+        <source src="/assets/mozk545a-2.mp4" type="video/mp4">
+      </video>
+      <div id="transport">sequencer not active</div>
+      <div>mixer</div>
+      <div id="mixer">
+        <div id="mixer">
+          <span>sequencer</span>
+          <input id="mixer-slider" name="mix" type="range" value="0.5" min="0" max="1" step="0.01">
+          <span>video</span>
+        </div>
+      </div>
+    </div>
+    <script src="./src/index.ts"></script>
 </body>
 
 </html>

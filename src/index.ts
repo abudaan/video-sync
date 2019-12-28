@@ -4,6 +4,7 @@ import { loadJSON, addAssetPack } from './action-utils';
 let raqSong: number = -1;
 let raqTransport: number = -1;
 let video: HTMLVideoElement;
+let mixer: HTMLInputElement;
 let transport: HTMLDivElement;
 let song: Heartbeat.Song;
 const offset: number = 23000 + ((24 / 30) * 1000); // 30fps
@@ -50,6 +51,7 @@ const setupSequencer = async () => {
   const json = await loadJSON(instrumentUrl);
   await addAssetPack(json);
   song.tracks.forEach(track => { track.setInstrument(instrumentName); })
+  song.setVolume(0.5);
 }
 
 const syncTransport = () => {
@@ -77,21 +79,30 @@ const syncSequencer = () => {
 const updateTransportDisplay = (div: HTMLDivElement, song: Heartbeat.Song) => {
   const { sync } = getSyncPosition();
   if (sync) {
-    div.innerHTML = `${song.bar}: ${song.beat} : ${song.sixteenth} : ${song.tick}<br/>${song.playhead.data.timeAsString}`;
+    div.innerHTML = `<span>${song.bar}:${song.beat}:${song.sixteenth}:${song.tick}</span><span>${song.playhead.data.timeAsString}</span>`;
   } else {
-    div.innerHTML = '';
+    div.innerHTML = 'sequencer not active';
   }
 }
 
+const updateMixer = (value: number) => {
+  video.volume = value;
+  song.setVolume(1 - value);
+}
+
 window.onload = async () => {
-  await setupSequencer();
 
   video = document.getElementsByTagName('video')[0] as HTMLVideoElement;
+  mixer = document.getElementById('mixer-slider') as HTMLInputElement;
   transport = document.getElementById('transport') as HTMLDivElement;
 
   if (video === null) {
     throw new Error('no video element found');
   }
+
+  video.volume = 0.5;
+
+  await setupSequencer();
 
   video.addEventListener('play', (e) => {
     // console.log('play');
@@ -129,6 +140,14 @@ window.onload = async () => {
       raqTransport = requestAnimationFrame(syncTransport);
     }
   });
+
+  mixer.addEventListener('change', (e: Event): any => {
+    updateMixer(mixer.valueAsNumber);
+  })
+
+  mixer.addEventListener('input', (e: Event): any => {
+    updateMixer(mixer.valueAsNumber);
+  })
 }
 
 
