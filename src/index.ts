@@ -47,13 +47,12 @@ const syncTransport = () => {
 }
 
 const syncSequencer = () => {
-  // console.log(video.currentTime, raqSong);
-  if ((video.currentTime * 1000) < offset) {
-    raqSong = requestAnimationFrame(syncSequencer);
-  } else {
+  // console.log(video.currentTime * 1000, offset, video.paused);
+  if ((video.currentTime * 1000) > offset && video.paused === false && song.playing === false) {
     song.play();
-    raqTransport = requestAnimationFrame(syncTransport);
   }
+  raqSong = requestAnimationFrame(syncSequencer);
+  // raqTransport = requestAnimationFrame(syncTransport);
 }
 
 const updateTransportDisplay = (div: HTMLDivElement, song: Heartbeat.Song) => {
@@ -80,25 +79,28 @@ window.onload = async () => {
   }
 
   video.addEventListener('play', (e) => {
-    // console.log('play', e, raqSong, song.playing, video.currentTime);
-    cancelAnimationFrame(raqSong);
-    if ((video.currentTime * 1000) < offset) {
-      raqSong = requestAnimationFrame(syncSequencer);
-    } else {
-      song.play();
-      raqTransport = requestAnimationFrame(syncTransport);
-    }
+    console.log('play', e, raqSong, song.playing, video.currentTime);
+    // if ((video.currentTime * 1000) < offset) {
+    //   raqSong = requestAnimationFrame(syncSequencer);
+    //   cancelAnimationFrame(raqTransport);
+    // } else {
+    // song.play();
+    raqSong = requestAnimationFrame(syncSequencer);
+    raqTransport = requestAnimationFrame(syncTransport);
+    // }
   });
 
   video.addEventListener('pause', (e) => {
-    // console.log('pause', e);
+    console.log('pause', e);
     cancelAnimationFrame(raqSong);
     cancelAnimationFrame(raqTransport);
-    song.pause();
+    if (song.playing) {
+      song.pause();
+    }
   });
 
   video.addEventListener('complete', (e) => {
-    // console.log('complete', e);
+    console.log('complete', e);
     cancelAnimationFrame(raqSong);
     cancelAnimationFrame(raqTransport);
     song.stop();
@@ -107,9 +109,9 @@ window.onload = async () => {
   video.addEventListener('seeking', (e) => {
     // console.log('seeking', song.playing);
     // cancelAnimationFrame(raqSong);
-    // cancelAnimationFrame(raqTransport);
+    cancelAnimationFrame(raqTransport);
     const pos = (video.currentTime * 1000) - offset;
-    song.setPlayhead('millis', pos < 0 ? 0 : pos);
+    // song.setPlayhead('millis', pos < 0 ? 0 : pos);
     updateTransportDisplay(transport, song);
   });
 
@@ -118,8 +120,12 @@ window.onload = async () => {
     // cancelAnimationFrame(raqSong);
     // cancelAnimationFrame(raqTransport);
     const pos = (video.currentTime * 1000);
-    console.log(pos > song.durationMillis);
-    song.setPlayhead('millis', pos <= offset ? 0 : pos >= song.durationMillis ? song.durationMillis : pos);
+    // console.log(pos > song.durationMillis);
+    // song.setPlayhead('millis', pos <= offset ? 0 : pos >= (offset + song.durationMillis) ? song.durationMillis : pos);
+    song.setPlayhead('millis', pos <= offset ? 0 : pos - offset);
+    if (song.playing) {
+      raqTransport = requestAnimationFrame(syncTransport);
+    }
   });
 }
 
