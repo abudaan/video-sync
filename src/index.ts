@@ -91,7 +91,6 @@ const updateMixer = (value: number) => {
 }
 
 window.onload = async () => {
-
   video = document.getElementsByTagName('video')[0] as HTMLVideoElement;
   mixer = document.getElementById('mixer-slider') as HTMLInputElement;
   transport = document.getElementById('transport') as HTMLDivElement;
@@ -99,7 +98,6 @@ window.onload = async () => {
   if (video === null) {
     throw new Error('no video element found');
   }
-
   video.volume = 0.5;
 
   await setupSequencer();
@@ -133,7 +131,6 @@ window.onload = async () => {
   });
 
   video.addEventListener('seeked', (e) => {
-    // console.log('seeked');
     const { pos } = getSyncPosition()
     song.setPlayhead('millis', pos);
     if (song.playing) {
