@@ -1,12 +1,12 @@
 import sequencer from 'heartbeat-sequencer';
-import { loadJSON, initSequencer, addAssetPack } from './action-utils';
+import { loadJSON, addAssetPack } from './action-utils';
 
 let raqSong: number = -1;
 let raqTransport: number = -1;
 let video: HTMLVideoElement;
 let transport: HTMLDivElement;
 let song: Heartbeat.Song;
-const offset: number = 23000 + ((26 / 30) * 1000); // 30fps
+const offset: number = 23000 + ((24 / 30) * 1000); // 30fps
 const midiFileName: string = '/mozk545a-2';
 const midiFileUrl: string = `./assets/${midiFileName}.mid`;
 const instrumentName: string = 'TP03-Vibraphone';//'TP00-PianoStereo';
@@ -18,18 +18,29 @@ const loadMIDIFile = (url: string): Promise<void> => {
   });
 }
 
-const translatePostion = () => {
+const getSyncPosition = (): { pos: number, sync: boolean } => {
   const vp = video.currentTime * 1000;
-  const min = vp + offset;
+  const min = offset;
   const max = offset + song.durationMillis;
-  console.log(vp, min, max);
+  // console.log(vp, min, max);
   if (vp <= min) {
-    return 0
+    // console.log('[MIN]', min);
+    return {
+      pos: 0,
+      sync: false,
+    }
   }
   if (vp >= max) {
-    return song.durationMillis;
+    // console.log('[MAX]', max);
+    return {
+      pos: song.durationMillis,
+      sync: false,
+    }
   }
-  return vp;
+  return {
+    pos: vp - offset,
+    sync: true,
+  };
 }
 
 const setupSequencer = async () => {
@@ -47,51 +58,49 @@ const syncTransport = () => {
 }
 
 const syncSequencer = () => {
-  // console.log(video.currentTime * 1000, offset, video.paused);
-  if ((video.currentTime * 1000) > offset && video.paused === false && song.playing === false) {
+  const { pos, sync } = getSyncPosition();
+  if (sync && video.paused === false && song.playing === false) {
     song.play();
+  } else if (!sync) {
+    if (song.playing) {
+      console.log('[STOP SYNC]')
+      song.stop();
+    }
+    if (song.millis !== pos) {
+      console.log('[SYNC PLAYHEAD]')
+      song.setPlayhead('millis', pos);
+    }
   }
   raqSong = requestAnimationFrame(syncSequencer);
-  // raqTransport = requestAnimationFrame(syncTransport);
 }
 
 const updateTransportDisplay = (div: HTMLDivElement, song: Heartbeat.Song) => {
-  // console.log(video.currentTime * 1000, offset, song.durationMillis);
-  // console.log(song.millis, offset);
-  // // if ((video.currentTime * 1000) < offset || (video.currentTime * 1000) > (offset + song.durationMillis)) {
-  // if (song.millis < offset) {
-  //   div.innerHTML = '';
-  // } else {
-  // }
-  div.innerHTML = `${song.bar}: ${song.beat} : ${song.sixteenth} : ${song.tick}<br/>${song.playhead.data.timeAsString}`;
+  const { sync } = getSyncPosition();
+  if (sync) {
+    div.innerHTML = `${song.bar}: ${song.beat} : ${song.sixteenth} : ${song.tick}<br/>${song.playhead.data.timeAsString}`;
+  } else {
+    div.innerHTML = '';
+  }
 }
 
 window.onload = async () => {
   await setupSequencer();
 
   video = document.getElementsByTagName('video')[0] as HTMLVideoElement;
-
   transport = document.getElementById('transport') as HTMLDivElement;
-  updateTransportDisplay(transport, song);
 
   if (video === null) {
     throw new Error('no video element found');
   }
 
   video.addEventListener('play', (e) => {
-    console.log('play', e, raqSong, song.playing, video.currentTime);
-    // if ((video.currentTime * 1000) < offset) {
-    //   raqSong = requestAnimationFrame(syncSequencer);
-    //   cancelAnimationFrame(raqTransport);
-    // } else {
-    // song.play();
+    // console.log('play');
     raqSong = requestAnimationFrame(syncSequencer);
     raqTransport = requestAnimationFrame(syncTransport);
-    // }
   });
 
   video.addEventListener('pause', (e) => {
-    console.log('pause', e);
+    // console.log('pause');
     cancelAnimationFrame(raqSong);
     cancelAnimationFrame(raqTransport);
     if (song.playing) {
@@ -100,29 +109,22 @@ window.onload = async () => {
   });
 
   video.addEventListener('complete', (e) => {
-    console.log('complete', e);
+    // console.log('complete');
     cancelAnimationFrame(raqSong);
     cancelAnimationFrame(raqTransport);
     song.stop();
   });
 
   video.addEventListener('seeking', (e) => {
-    // console.log('seeking', song.playing);
-    // cancelAnimationFrame(raqSong);
+    // console.log('seeking');
     cancelAnimationFrame(raqTransport);
-    const pos = (video.currentTime * 1000) - offset;
-    // song.setPlayhead('millis', pos < 0 ? 0 : pos);
     updateTransportDisplay(transport, song);
   });
 
   video.addEventListener('seeked', (e) => {
-    // console.log('complete', e, (video.currentTime * 1000), song);
-    // cancelAnimationFrame(raqSong);
-    // cancelAnimationFrame(raqTransport);
-    const pos = (video.currentTime * 1000);
-    // console.log(pos > song.durationMillis);
-    // song.setPlayhead('millis', pos <= offset ? 0 : pos >= (offset + song.durationMillis) ? song.durationMillis : pos);
-    song.setPlayhead('millis', pos <= offset ? 0 : pos - offset);
+    // console.log('seeked');
+    const { pos } = getSyncPosition()
+    song.setPlayhead('millis', pos);
     if (song.playing) {
       raqTransport = requestAnimationFrame(syncTransport);
     }
