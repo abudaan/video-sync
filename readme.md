@@ -1,5 +1,5 @@
 [**live version&#8599;**](https://heartbeatjs.org/prototypes/video-sync/)<br/>
-> **summary:** ==This a prototype that shows that a MIDI file rendered to audio can be synchronized to live MIDI playback of that same file in a sequencer==.
+**Summary:** This prototype shows that a MIDI file rendered to audio can be synchronized to live MIDI playback of that same file in a sequencer.
 
 By rendering MIDI to audio I mean: MIDI exported to an audio file. In Logic this function is called 'bounce', in most other DAWs it is simply called 'export to audio'.
 
